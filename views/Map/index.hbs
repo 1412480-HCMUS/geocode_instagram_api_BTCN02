@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Map API</title>
+    <link rel="stylesheet" type="text/css" href="/assests/bootstrap-3.3.7-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/assests/bootstrap-3.3.7-dist/css/style.css">
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 100%;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+    </style>
+  </head>
+  <body>
+    <!-- header -->
+    <div class="jumbotron" style="
+        width: 70%;
+        height: 100px;
+        padding: 0;
+        padding-top: 10px;
+        margin: auto;
+    ">
+      <div class = "col-md-8">
+          <h4>Map API</h4>
+      </div>
+    </div>
+    <!-- header -->
+    <!-- menu -->
+    <div class="container-fluid" style="width: 70%; max-width: none!important; 
+     margin-right: auto; margin-left: auto; height: 60px;">
+       <div id="nav" class="row navbar" style="background: #1d71ab;padding-top:1%;padding-bottom:1%;">
+        <!-- Navigation bar -->
+          <ul style="list-style:none;text-align:center;">
+            <li style="width:10%;"> <a href="/Map">Home</a></li>
+            <!-- <li style="width:20%;"><a href="/youtubeAPI/ownUploads">User's uploads</a></li> -->
+          </ul>
+      </div><!-- /Navigation bar -->
+    </div>
+    <!-- menu -->
+
+    <div class="container-fluid" style="width: 70%; max-width: none!important; margin-right: auto; margin-left: auto;">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="panel panel-default" style="border-color: #189eff;">
+            <div class="panel-heading" style=" background: #189eff;">
+              <span class="panel-title">Map</span>
+            </div>
+            <div class="panel-body">
+              <div class="form-group">
+                <input type="text" class="form-control" id="address">
+                <br>
+                <input id="submit" type="button" value="Geocode">
+              </div>
+              <!-- Tạo clone, không bị mất khi clear vùng tìm kiếm -->
+              <div class="col-md-12 hide" id="item">
+                  <a id="linkItem" href=""></a>
+              </div>
+
+              <div class="col-md-12" id="search-container"> 
+                
+              </div>
+
+              <div id="map"></div>
+              
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- footer -->
+    <div class="container-fluid" style="width: 70%; max-width: none!important; margin-right: auto; margin-left: auto;">
+      <div class="row"  style="background: #eee;  height: 40px">
+          <b>@Copy right</b>
+          <a href="#" target="_blank" >Nguyễn Quang Thanh Tâm</a>
+        </div>
+    </div>
+    <!-- footer -->
+
+    <script type="text/javascript" src="/assests/jquery-3.1.1.min.js"></script>
+    <script type="text/javascript" src="/assests/bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+    <script type="text/javascript" src="/assests/Js/Auth.js"></script>
+    <script type="text/javascript" src="/assests/Js/Search.js"></script>
+    <script>
+      var markers = [];
+      function initMap() {
+        var map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 18,
+          center: {lat: 10.7626772, lng: 106.68256919999999}
+        });
+        var geocoder = new google.maps.Geocoder();
+        var infowindow = new google.maps.InfoWindow;
+
+        var input = document.getElementById('address');
+        var autocomplete = new google.maps.places.Autocomplete(input);
+        // Bind the map's bounds (viewport) property to the autocomplete object,
+        // so that the autocomplete requests use the current map bounds for the
+        // bounds option in the request.
+        autocomplete.bindTo('bounds', map);
+
+        document.getElementById('submit').addEventListener('click', function() {
+          clearMarkers();
+          geocodeAddress(geocoder, map, infowindow);
+          $('#search-container').empty();
+        });
+      }
+
+      function geocodeAddress(geocoder, resultsMap, infowindow) {
+        var address = document.getElementById('address').value;
+        geocoder.geocode({'address': address}, function(results, status) {
+          if (status === 'OK') {
+            //console.log(results);
+            results.forEach(function(item, index){
+              //console.log(item);
+              getLocationByAjax(item);
+            });
+          } else {
+            alert('Geocode was not successful for the following reason: ' + status);
+          }
+        });
+      }
+
+      function clearMarkers() {
+        for (var i = 0; i < markers.length; i++) {
+          markers[i].setMap(null);
+        }
+        markers = [];
+      }
+
+      function getLocationByAjax(item) {
+        var param = {
+          lat: item.geometry.location.lat(),
+          lng: item.geometry.location.lng()
+        };
+        //console.log(param);
+        $.ajax({
+            url: 'api/myApi/GetLocation',
+            data: param,
+            dataType: 'json',
+            type: 'GET',
+            success: function(result) {
+              
+              console.log(result);
+              if(result) {
+                displayResult(result);
+              }
+             
+            }
+        });
+      }
+      function displayResult(list) {
+        list.data.forEach(function(item, index){
+        var itemDiv = $('#item').clone();
+        itemDiv.removeClass('hide');
+        var id = item.id;
+        var url = '/Map/Media?locationId=' + id;
+        $(itemDiv).find('#linkItem').attr('href', url);
+        $(itemDiv).find('#linkItem').html(item.name);
+        $('#search-container').append(itemDiv);
+      });
+      }
+    </script>
+    <script async defer
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDcr-SY5iirhfPwFUGXfWnxowancGHKGnw&libraries=places&callback=initMap">
+    </script>
+  </body>
+</html>

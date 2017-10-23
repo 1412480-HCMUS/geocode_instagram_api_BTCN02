@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Map API</title>
+	<link rel="stylesheet" type="text/css" href="/assests/bootstrap-3.3.7-dist/css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="/assests/bootstrap-3.3.7-dist/css/style.css">
+</head>
+<body>
+	<!-- header -->
+	<div class="jumbotron" style="
+	    width: 75%;
+	    height: 100px;
+	    padding: 0;
+	    padding-top: 10px;
+	    margin: auto;
+	">
+	 	<div class = "col-md-8">
+	    	<h4>Map API</h4>
+	 	</div>
+           
+	</div>
+	<!-- header -->
+	<!-- menu -->
+	<div class="container-fluid" style="width: 75%; max-width: none!important; 
+	 margin-right: auto; margin-left: auto; height: 60px;">
+		 <div id="nav" class="row navbar" style="background: #1d71ab;padding-top:1%;padding-bottom:1%;">
+		 	<!-- Navigation bar -->
+				<ul style="list-style:none;text-align:center;">
+					<li style="width:10%;"> <a href="/Map">Home</a></li>
+            		<!-- <li style="width:20%;"><a href="/youtubeAPI/ownUploads">User's uploads</a></li> -->
+				</ul>
+		</div><!-- /Navigation bar -->
+	</div>
+	<!-- menu -->
+
+	<div class="container-fluid" style="width: 75%; max-width: none!important; margin-right: auto; margin-left: auto;">
+		<div class="row">
+			<input type="hidden" class="form-control" id="id" name"id" value={{videoId}}>
+			<div class="col-md-12">
+				<div class="panel panel-default" style="border-color: #189eff;">
+					<div class="panel-heading" style=" background: #189eff;">
+						<span class="panel-title">{{name}}</span>
+					</div>
+					<div class="panel-body">
+						<div class="col-md-12" id="search-container">
+
+              <div class="col-md-3 hide" id="listItems" >
+                <div class="thumbnail" style="border-color: #189eff;">
+                  <a id="linkItem" href=""><img id="thumbnailItem" src="" style="max-width:100%;" /></a>
+                  <div class="caption" style=" background: #eee;">
+                    <h5 id="titleItem" style="margin: 0 0; font-weight: bold;"></h5>
+                  </div>
+                </div>
+              </div>
+
+						</div>
+					</div>
+          <div class=" panel-footer" style="text-align: center">
+            <button class="btn-info" id="btnLoadMore">Load more </button>  
+          </div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<!-- footer -->
+	<div class="container-fluid" style="width: 75%; max-width: none!important; margin-right: auto; margin-left: auto;">
+	 	<div class="row"  style="background: #eee;  height: 40px">
+	   		<b>@Copy right</b>
+	   		<a href="#" target="_blank" >Nguyễn Quang Thanh Tâm</a>
+	    </div>
+	</div>
+	<!-- footer -->
+
+	<script type="text/javascript" src="/assests/jquery-3.1.1.min.js"></script>
+	<script type="text/javascript" src="/assests/bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
+	<script>
+      var locationId = '';
+      var pagination ='';
+      $(document).ready(function(){
+        locationId = {{id}};
+        getMediaLocationByAjax(locationId);
+        $('#btnLoadMore').on('click', loadMore);
+      });
+
+      function getMediaLocationByAjax(locationId){
+        var param = {
+          locationId: locationId
+        };
+        $.ajax({
+          url: '/api/myApi/GetMedia',
+          data: param,
+          dataType: 'json',
+          type: 'GET',
+          success: function(result){
+            console.log(result);
+            pagination = result.pagination.next_url;
+            //console.log(result.data.length);
+            if(result){
+              if(result.data.length > 1){
+                result.data.forEach(function(item, index){
+                  displayMedia(item);
+                });
+              }
+            }
+          }
+        });
+      }
+
+      function displayMedia(item){
+       //console.log(item);
+       var itemDiv = $('#listItems').clone();
+       itemDiv.removeClass('hide');
+       var url = item.link;
+       $(itemDiv).find('#linkItem').attr('href', url);
+       $(itemDiv).find('#thumbnailItem').attr('src', item.images.thumbnail.url);
+
+       // if(item.caption) {
+       //  $(itemDiv).find('#titleItem').html('&nbsp');
+       // } else {
+       //  $(itemDiv).find('#titleItem').html('&nbsp');
+       // }
+       
+       $('#search-container').append(itemDiv);
+      }
+
+      function loadMore(){
+        var param = {
+          pagination: pagination
+        };
+        $.ajax({
+          url: '/api/myApi/GetMediaPagination',
+          data: param,
+          dataType: 'json',
+          type: 'GET',
+          success: function(result){
+            //console.log(result);
+            pagination = result.pagination.next_url;
+            //console.log(result.data.length);
+            if(result){
+              if(result.data.length > 1){
+                result.data.forEach(function(item, index){
+                  displayMedia(item);
+                });
+              }
+            }
+          }
+        });
+      }
+
+  </script>
+</html>
